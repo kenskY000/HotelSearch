@@ -4,7 +4,7 @@ from states.hotel_search_states import HotelSearchState
 from api_requests import hotel_search_requests
 from keyboards.inline import cities
 from telegram_bot_calendar import DetailedTelegramCalendar, LSTEP
-from datetime import datetime
+from datetime import date
 
 
 @bot.message_handler(commands=['hotel_search'])
@@ -19,7 +19,7 @@ def hotel_search(message: Message) -> None:
     bot.send_message(message.from_user.id, f'Введите город, в котором хотите найти отель')
 
 
-@bot.message_handler(state=HotelSearchState.location)
+@bot.message_handler()
 def get_location(message: Message) -> None:
     response = hotel_search_requests.cities_request(message.text)
 
@@ -37,28 +37,30 @@ def get_location(message: Message) -> None:
     )
 
 
-@bot.callback_query_handler(func=lambda callback: True)
+@bot.callback_query_handler(func=lambda callback: True, state=HotelSearchState.location)
 def callback_message(callback):
     bot.send_message(callback.message.chat.id,
                      f'Город выбран, теперь выберите дату заселения')
-    #bot.set_state(callback.message.from_user.id, HotelSearchState.check_in, callback.message.chat.id)
 
     with bot.retrieve_data(callback.message.chat.id) as data:
         data['location_id'] = callback.data
-    bot.answer_callback_query(callback.id)
 
+    print(data['location_id'])
 
 # @bot.message_handler(state=HotelSearchState.check_in)
 # def check_in(m):
-    calendar, step = DetailedTelegramCalendar().build()
+    calendar, step = DetailedTelegramCalendar(min_date=date.today(), locale='ru').build()
     bot.send_message(callback.message.chat.id,
                      f"Select {LSTEP[step]}",
                      reply_markup=calendar)
+    bot.set_state(callback.message.from_user.id, HotelSearchState.check_in, callback.message.chat.id)
+    bot.answer_callback_query(callback.id)
 
 
-@bot.callback_query_handler(func=DetailedTelegramCalendar.func())
+@bot.callback_query_handler(state=HotelSearchState.check_in, func=DetailedTelegramCalendar.func())
 def cal(c):
-    result, key, step = DetailedTelegramCalendar(min_date=datetime.today(), locale='ru').process(c.data)
+    print('внизу')
+    result, key, step = DetailedTelegramCalendar(min_date=date.today(), locale='ru').process(c.data)
     if not result and key:
         bot.edit_message_text(f"Select {LSTEP[step]}",
                               c.message.chat.id,
@@ -68,4 +70,4 @@ def cal(c):
         bot.edit_message_text(f"You selected {result}",
                               c.message.chat.id,
                               c.message.message_id)
-        bot.set_state(c.message.chat.id, HotelSearchState.check_in, c.message.chat.id)
+        bot.answer_callback_query(c.id)
