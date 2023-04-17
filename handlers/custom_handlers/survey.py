@@ -105,5 +105,6 @@ def get_contact(message: Message) -> None:
                     f'Город - {data["city"]}\n'
                     f'Номер телефона - {data["phone_number"]}')
             bot.send_message(message.from_user.id, text)
+            bot.delete_state(message.from_user.id, message.chat.id)
     else:
         bot.send_message(message.from_user.id, 'Чтобы отправить контактную информацию на кнопку')
