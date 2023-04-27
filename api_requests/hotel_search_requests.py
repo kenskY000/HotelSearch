@@ -2,8 +2,10 @@ from typing import List
 import requests
 import os
 import json
+from loguru import logger
 
-
+logger.add("debug.log", format="{time} {level} {message}",
+           level="DEBUG")
 headers = {
         "X-RapidAPI-Key": os.getenv('RAPID_API_KEY'),
         "X-RapidAPI-Host": os.getenv('RAPID_API_HOST')
@@ -86,6 +88,7 @@ def hotels_request(region_id: str, check_in_date: dict, check_out_date: dict,
     return response_json
 
 
+@logger.catch
 def images_request(hotel: str) -> List:
     url = "https://hotels4.p.rapidapi.com/properties/v2/detail"
 
@@ -98,6 +101,14 @@ def images_request(hotel: str) -> List:
     }
 
     response = requests.request("POST", url, json=payload, headers=headers)
+    # TODO: проверьте пожалуйста правильно ли я реализовал логирование?
+    #  Если такой пример годится, то добавлю еще
+    try:
+        if response.status_code != requests.codes.ok:
+            raise Exception
+    except Exception:
+        logger.error(response.status_code)
+
     response_json = json.loads(response.text)
 
     images_list = []
