@@ -9,3 +9,8 @@ class HotelSearchState(StatesGroup):
     location = State()
     check_in = State()
     check_out = State()
+    adult_guests = State()
+    child_guests = State()
+    child_age = State()
+    sort_method = State()
+    custom_range = State()
