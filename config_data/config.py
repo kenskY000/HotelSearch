@@ -10,7 +10,5 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 RAPID_API_KEY = os.getenv("RAPID_API_KEY")
 DEFAULT_COMMANDS = (
     ("start", "Запустить бота"),
-    ("hello_world", "Приветственное сообщение!"),
     ("help", "Вывести справку"),
-    ("survey", "Опрос")
 )
