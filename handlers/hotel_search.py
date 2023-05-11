@@ -7,6 +7,8 @@ from keyboards.inline import cities
 from keyboards.reply import result_output
 from telegram_bot_calendar import DetailedTelegramCalendar, LSTEP
 from datetime import date
+from database.core import crud
+from database.models import db, History
 
 
 @bot.message_handler(commands=['start'])
@@ -251,6 +253,20 @@ def result_print(message: Message) -> None:
     :param message: Message
     :return: None
     """
+    with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
+        db_write = crud.create()
+        location = str(data['location_id'])
+        check_in = str(data['check_in'])
+        check_out = str(data['check_out'])
+        adult_guests = str(data['adult_guests'])
+        children = str(data['children'])
+        data_for_db = [{'request': {'ID Локации': location,
+                                    'Дата заезда': check_in,
+                                    'Дата выезда': check_out,
+                                    'Взрослых гостей': adult_guests,
+                                    'Детей': children}}]
+        db_write(db, History, data_for_db)
+
     if message.text == 'От самых дешевых к самым дорогим':
         low_to_high(message)
     elif message.text == 'От самых дорогих к самым дешевым':
@@ -366,7 +382,7 @@ def low_to_high(message: Message):
             sort_method='PRICE_LOW_TO_HIGH'
         )
 
-    for item in range(10):
+    for item in range(2):
         properties = response['data']['propertySearch']['properties'][item]
         text = properties['name']
         hotel_id = properties['id']
@@ -386,3 +402,4 @@ def low_to_high(message: Message):
             [InputMediaPhoto(photo, caption=msg) for photo in images]
         )
         bot.send_message(message.chat.id, msg)
+
