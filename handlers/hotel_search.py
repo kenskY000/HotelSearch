@@ -382,7 +382,7 @@ def low_to_high(message: Message):
             sort_method='PRICE_LOW_TO_HIGH'
         )
 
-    for item in range(2):
+    for item in range(10):
         properties = response['data']['propertySearch']['properties'][item]
         text = properties['name']
         hotel_id = properties['id']
