@@ -14,5 +14,5 @@ class ModelBase(pw.Model):
 
 
 class History(ModelBase):
-    number = pw.TextField()
-    message = pw.TextField()
+    #number = pw.TextField()
+    request = pw.TextField()
