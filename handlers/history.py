@@ -5,7 +5,12 @@ from database.models import db, History
 
 
 @bot.message_handler(commands=['history'])
-def history(message: Message):
+def history(message: Message) -> None:
+    """
+    Хендлер, отлавливающий выполнение команды /history, отправляет пользователю
+    сообщение с историей запросов.
+    :param message: Сообщение от пользователя
+    """
     db_read = crud.retrieve()
     data = db_read(db, History, History.request)
     for elem in data:
