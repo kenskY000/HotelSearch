@@ -7,7 +7,7 @@ from database.models import db, ModelBase
 T = TypeVar('T')
 
 
-def _store_data(db: db, model: T, *data:List[Dict]) -> None:
+def _store_data(db: db, model: T, *data: List[Dict]) -> None:
     with db.atomic():
         model.insert_many(*data).execute()
 

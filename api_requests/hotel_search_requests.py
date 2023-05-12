@@ -6,24 +6,39 @@ from loguru import logger
 
 logger.add("debug.log", format="{time} {level} {message}",
            level="DEBUG")
-headers = {
-        "X-RapidAPI-Key": os.getenv('RAPID_API_KEY'),
-        "X-RapidAPI-Host": os.getenv('RAPID_API_HOST')
-    }
 
 
+def headers():
+    return {
+            "X-RapidAPI-Key": os.getenv('RAPID_API_KEY'),
+            "X-RapidAPI-Host": os.getenv('RAPID_API_HOST')
+        }
+
+
+@logger.catch
 def cities_request(city: str):
     url = "https://hotels4.p.rapidapi.com/locations/v3/search"
     querystring = {"q": city, "locale": "ru_RU"}
-    response = requests.request("GET", url, headers=headers,
-                                params=querystring, timeout=10)
+    response_json = None
+    try:
+        response = requests.request("GET", url, headers=headers(),
+                                    params=querystring, timeout=10)
+        if response.status_code != requests.codes.ok:
+            logger.error(response.status_code)
+        else:
+            response_json = json.loads(response.text)
+    except requests.RequestException as exc:
+        logger.error(f'ERROR cities_request -> {exc}')
+    if response_json is not None:
+        return response_json
+    else:
+        logger.error('ERROR cities_request -> response is empty!')
 
-    response_json = json.loads(response.text)
-    return response_json
 
-
-def hotels_request_custom(region_id: str, check_in_date: dict, check_out_date: dict,
-                   adults: int, children: list, min_price: int, max_price: int):
+@logger.catch
+def hotels_request_custom(region_id: str, check_in_date: dict,
+                          check_out_date: dict, adults: int,
+                          children: list, min_price: int, max_price: int):
 
     url = "https://hotels4.p.rapidapi.com/properties/v2/list"
     payload = {
@@ -52,12 +67,26 @@ def hotels_request_custom(region_id: str, check_in_date: dict, check_out_date: d
         }
     }
 
-    response = requests.request("POST", url, json=payload,
-                                headers=headers, timeout=10)
-    response_json = json.loads(response.text)
-    return response_json
+    response_json = None
+    try:
+        response = requests.request("POST", url, json=payload,
+                                    headers=headers(), timeout=10)
+
+        if response.status_code != requests.codes.ok:
+            logger.error(response.status_code)
+        else:
+            response_json = json.loads(response.text)
+
+    except requests.RequestException as exc:
+        logger.error(f'ERROR hotels_request_custom -> {exc}')
+
+    if response_json is not None:
+        return response_json
+    else:
+        logger.error('ERROR hotels_request_custom -> response is empty!')
 
 
+@logger.catch
 def hotels_request(region_id: str, check_in_date: dict, check_out_date: dict,
                    adults: int, children: list, sort_method: str):
 
@@ -81,11 +110,23 @@ def hotels_request(region_id: str, check_in_date: dict, check_out_date: dict,
         "sort": sort_method,
         "filters": {'availableFilter': 'SHOW_AVAILABLE_ONLY'}
     }
+    response_json = None
+    try:
+        response = requests.request("POST", url, json=payload,
+                                    headers=headers(), timeout=10)
 
-    response = requests.request("POST", url, json=payload,
-                                headers=headers, timeout=10)
-    response_json = json.loads(response.text)
-    return response_json
+        if response.status_code != requests.codes.ok:
+            logger.error(response.status_code)
+        else:
+            response_json = json.loads(response.text)
+
+    except requests.RequestException as exc:
+        logger.error(f'ERROR hotels_request_custom -> {exc}')
+
+    if response_json is not None:
+        return response_json
+    else:
+        logger.error('ERROR hotels_request_custom -> response is empty!')
 
 
 @logger.catch
@@ -99,24 +140,28 @@ def images_request(hotel: str) -> List:
         "siteId": 300000001,
         "propertyId": hotel
     }
+    images = None
 
-    response = requests.request("POST", url, json=payload, headers=headers)
-    # TODO: проверьте пожалуйста правильно ли я реализовал логирование?
-    #  Если такой пример годится, то добавлю еще
     try:
+        response = requests.request("POST", url, json=payload,
+                                    headers=headers(), timeout=10)
         if response.status_code != requests.codes.ok:
-            raise Exception
-    except Exception:
-        logger.error(response.status_code)
+            logger.error(response.status_code)
+        else:
+            response_json = json.loads(response.text)
 
-    response_json = json.loads(response.text)
+            images = []
+            for item in range(5):
+                image_url = (
+                    response_json['data']['propertyInfo']['propertyGallery']
+                    ['images'][item]['image']['url']
+                )
+                images.append(image_url)
 
-    images_list = []
-    for item in range(5):
-        image_url = (
-            response_json['data']['propertyInfo']['propertyGallery']
-            ['images'][item]['image']['url']
-        )
-        images_list.append(image_url)
+    except requests.RequestException as exc:
+        logger.error(f'ERROR images_request -> {exc}')
 
-    return images_list
+    if images:
+        return images
+    else:
+        logger.error('ERROR images_request -> No images found!')

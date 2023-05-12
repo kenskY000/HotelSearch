@@ -11,5 +11,5 @@ def bot_echo(message: Message):
     :param message: Сообщение поступающее от пользователя
     """
     bot.reply_to(
-        message, "Эхо без состояния или фильтра.\n" f"Сообщение: {message.text}"
+        message, f"Эхо без состояния или фильтра.\n Сообщение: {message.text}"
     )
