@@ -341,7 +341,6 @@ def high_to_low(message):
             data['check_out'],
             data['adult_guests'],
             data['children'],
-            sort_method='PRICE_LOW_TO_HIGH'
         )
 
     for item in range(9, -1, -1):
@@ -379,7 +378,6 @@ def low_to_high(message: Message):
             data['check_out'],
             data['adult_guests'],
             data['children'],
-            sort_method='PRICE_LOW_TO_HIGH'
         )
 
     for item in range(10):
