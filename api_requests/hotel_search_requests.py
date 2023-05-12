@@ -9,6 +9,10 @@ logger.add("debug.log", format="{time} {level} {message}",
 
 
 def headers():
+    """
+    Функция для загрузки переменных окружения.
+    :return: Словарь с переменными окружения.
+    """
     return {
             "X-RapidAPI-Key": os.getenv('RAPID_API_KEY'),
             "X-RapidAPI-Host": os.getenv('RAPID_API_HOST')
@@ -17,6 +21,11 @@ def headers():
 
 @logger.catch
 def cities_request(city: str):
+    """
+    Функция для отправки GET-запроса к API.
+    :param city: Город, вводимый пользователем.
+    :return: JSON, содержащий несколько разных городов.
+    """
     url = "https://hotels4.p.rapidapi.com/locations/v3/search"
     querystring = {"q": city, "locale": "ru_RU"}
     response_json = None
@@ -39,7 +48,19 @@ def cities_request(city: str):
 def hotels_request_custom(region_id: str, check_in_date: dict,
                           check_out_date: dict, adults: int,
                           children: list, min_price: int, max_price: int):
-
+    """
+    Функция для отправки POST запроса к API. Возвращает список отелей в
+    диапазоне заданных цен.
+    :param region_id: ID города
+    :param check_in_date: Дата заезда
+    :param check_out_date: Дата выезда
+    :param adults: Количество взрослых
+    :param children: Количество детей
+    :param min_price: Минимальная стоимость отеля за ночь
+    :param max_price: Максимальная стоимость отеля за ночь
+    :return: JSON, содержащий разные предложения отелей, в диапазоне заданной
+    цены
+    """
     url = "https://hotels4.p.rapidapi.com/properties/v2/list"
     payload = {
         "currency": "USD",
@@ -88,8 +109,18 @@ def hotels_request_custom(region_id: str, check_in_date: dict,
 
 @logger.catch
 def hotels_request(region_id: str, check_in_date: dict, check_out_date: dict,
-                   adults: int, children: list, sort_method: str):
-
+                   adults: int, children: list):
+    """
+    Функция для отправки POST запроса к API. Возвращает список отелей в
+    диапазоне заданных цен.
+    :param region_id: ID города
+    :param check_in_date: Дата заезда
+    :param check_out_date: Дата выезда
+    :param adults: Количество взрослых
+    :param children: Количество детей
+    :return: JSON, содержащий разные предложения отелей, отсортированные по
+    возрастанию цены
+    """
     url = "https://hotels4.p.rapidapi.com/properties/v2/list"
     payload = {
         "currency": "RUB",
@@ -107,7 +138,7 @@ def hotels_request(region_id: str, check_in_date: dict, check_out_date: dict,
         ],
         "resultsStartingIndex": 0,
         "resultsSize": 10,
-        "sort": sort_method,
+        "sort": "PRICE_LOW_TO_HIGH",
         "filters": {'availableFilter': 'SHOW_AVAILABLE_ONLY'}
     }
     response_json = None
@@ -131,6 +162,12 @@ def hotels_request(region_id: str, check_in_date: dict, check_out_date: dict,
 
 @logger.catch
 def images_request(hotel: str) -> List:
+    """
+    Функция для запроса картинок по-заданному ID отеля.
+    :param hotel: ID отеля
+    :return: JSON, содержащий подробную информацию об отеле, из которого
+    в дальнейшем можно вытянуть изображения отеля
+    """
     url = "https://hotels4.p.rapidapi.com/properties/v2/detail"
 
     payload = {
